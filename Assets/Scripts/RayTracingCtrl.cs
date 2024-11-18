@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,6 +9,8 @@ public class RayTracingCtrl : MonoBehaviour
     [SerializeField] bool useShaderInSceneView;
     [SerializeField] Shader RayTracingShader;
     public Material rayTracingMaterial;
+    public Obj[] objs;
+    Sphere[] spheres;
 
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
@@ -16,6 +19,7 @@ public class RayTracingCtrl : MonoBehaviour
             //TODO:设置使用RayTracing的材质
             //ShaderHelper.InitMaterial(rayTracingShader, ref rayTracingMaterial);
             UpdateCam(Camera.current);
+            UpdateObj();
             //使用ray tracing并渲染到屏幕
             Graphics.Blit(null, destination, rayTracingMaterial);
         }
@@ -33,5 +37,17 @@ public class RayTracingCtrl : MonoBehaviour
         //Send data to shader
         rayTracingMaterial.SetVector("ViewParam", new Vector3(PlaneW, PlaneH, cam.nearClipPlane));
         rayTracingMaterial.SetMatrix("CamLocalToWorldMatrix", cam.transform.localToWorldMatrix);
+    }
+    private void UpdateObj()
+    {
+        spheres = new Sphere[objs.Length];
+        for (int i = 0; i < objs.Length; i++)
+        {
+            spheres[i] = objs[i].sphere;
+        }
+        ComputeBuffer buffer = new(spheres.Length, sizeof(float) * 8);
+        buffer.SetData(spheres);
+        rayTracingMaterial.SetBuffer("Spheres", buffer);
+        rayTracingMaterial.SetInteger("Num", spheres.Length);
     }
 }
