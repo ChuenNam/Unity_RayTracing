@@ -27,14 +27,22 @@ Shader "RayTracing"
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
             };
+            //物体材质
+            struct ObjectMaterial{
+                float4 color;
+                float4 emissionColor;
+                float emissionStrength;
+            };
+            //定义球体 >> 需要和外部结构体顺序保持一致!!!
+            struct Sphere{
+                float3 position;
+                float radius;
+                ObjectMaterial material;
+            };
             //射线信息
             struct Ray{
                 float3 origin;
                 float3 dir;
-            };
-            //物体材质
-            struct ObjectMaterial{
-                float4 color;
             };
             //射线检测信息
             struct HitInfo{
@@ -44,16 +52,10 @@ Shader "RayTracing"
                 float3 normal;      //交点法线
                 ObjectMaterial material;
             };
-            //定义球体 >> 需要和外部结构体顺序保持一致!!!
-            struct Sphere{
-                float3 position;
-                float radius;
-                ObjectMaterial material;
-            };
+
 
             //计算射线和球的交集
-            HitInfo RaySphere(Ray ray, float3 sphereCenter, float sphereRadius)
-            {
+            HitInfo RaySphere(Ray ray, float3 sphereCenter, float sphereRadius) {
                 HitInfo hitInfo = (HitInfo)0;
                 float3 offsetRayOrigin = ray.origin - sphereCenter;     //球心指向射线点的向量
 
@@ -78,10 +80,8 @@ Shader "RayTracing"
 
             StructuredBuffer<Sphere> Spheres;     //球体信息缓冲区
             int Num;    //球体个数
-
             //找到射线第一个碰到的点，并返回碰撞信息
-            HitInfo CalculateRayColl(Ray ray)
-            {
+            HitInfo CalculateRayColl(Ray ray) {
                 HitInfo closestHit = (HitInfo)0;
                 closestHit.dis = 1.#INF;
 
@@ -97,6 +97,63 @@ Shader "RayTracing"
                 return closestHit;
             }
 
+            //随机数生成器
+            float RandomValue(inout uint state){
+                // state *= (state + 195439) * (state + 547913) * (state + 910307);
+                // return state /4294967295.0;
+
+                state = state * 747796405 + 281336453;
+                uint result = ((state >> ((state >> 28) + 4)) ^ state) * 277803737;
+                result = (result >> 22) ^ result;
+                return result / 4294967295.0;
+            }
+
+            //返回正态分布的随机数
+            float RandomValueNormalDistribution(inout uint state){
+                float theta = 2 * 3.1415926 * RandomValue(state);
+                float rho = sqrt(-2 * log(RandomValue(state)));
+                return rho * cos(theta);
+            }
+            
+            //计算随机方向
+            float3 RandomDirection(inout uint state) {
+                float x = RandomValueNormalDistribution(state);
+                float y = RandomValueNormalDistribution(state);
+                float z = RandomValueNormalDistribution(state);
+                return normalize(float3(x,y,z));
+            }
+
+            //围绕给出法向的半球内随即方向
+            float3 RandomHemisphereDirection(float3 normal, inout uint rngstate){
+                float3 dir = RandomDirection(rngstate);
+                return dir * sign(dot(normal, dir));
+            }
+
+            int MaxBounceCount;
+            //追踪函数
+            float3 Trace(Ray ray, inout uint rng){
+
+                float3 incomingLight = 0;
+                float3 rayColor = 1;
+
+                for (int i = 0; i <= MaxBounceCount; i++){
+                    HitInfo hitInfo = CalculateRayColl(ray);
+                    if(hitInfo.didHit){
+                        ray.origin = hitInfo.hitPoint;
+                        ray.dir = RandomHemisphereDirection(hitInfo.normal, rng);
+
+                        ObjectMaterial material = hitInfo.material;
+                        float3 emittedLight = material.emissionColor * material.emissionStrength;
+                        incomingLight += emittedLight * rayColor;
+                        rayColor *= material.color;
+                    }
+                    else{
+                        break;
+                    }
+                }
+
+                return incomingLight;
+            }
 
 
             sampler2D _MainTex;
@@ -114,13 +171,23 @@ Shader "RayTracing"
 
             fixed4 frag (v2f i) : SV_Target
             {
+                //Random(noisy)
+                uint2 numPixel = uint2(1920,1080);
+                uint2 pixelCoord = i.uv * numPixel;
+                uint pixelIndex = pixelCoord.y * numPixel.x + pixelCoord.x;
+                uint rng = pixelIndex;
+
+                //创建射线
                 float3 viewPointLocal = float3(i.uv - 0.5, 1) * ViewParam;
                 float3 viewPoint = mul(CamLocalToWorldMatrix, float4(viewPointLocal, 1));
 
                 Ray ray;
                 ray.origin = _WorldSpaceCameraPos;
                 ray.dir = normalize(viewPoint - ray.origin);
-                return CalculateRayColl(ray).material.color;
+                // return CalculateRayColl(ray).material.color;
+
+                float3 pixelCol = Trace(ray, rng);
+                return float4(pixelCol, 1);
             }
             ENDCG
         }

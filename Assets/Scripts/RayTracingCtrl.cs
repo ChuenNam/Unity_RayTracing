@@ -8,7 +8,9 @@ public class RayTracingCtrl : MonoBehaviour
 {
     [SerializeField] bool useShaderInSceneView;
     [SerializeField] Shader RayTracingShader;
-    public Material rayTracingMaterial;
+    [SerializeField] Material rayTracingMaterial;
+    [SerializeField] int MaxBounceCount;
+
     public Obj[] objs;
     Sphere[] spheres;
 
@@ -18,8 +20,11 @@ public class RayTracingCtrl : MonoBehaviour
         {
             //TODO:设置使用RayTracing的材质
             //ShaderHelper.InitMaterial(rayTracingShader, ref rayTracingMaterial);
+
+            //传递shader数据
             UpdateCam(Camera.current);
             UpdateObj();
+            UpdateData();
             //使用ray tracing并渲染到屏幕
             Graphics.Blit(null, destination, rayTracingMaterial);
         }
@@ -45,9 +50,13 @@ public class RayTracingCtrl : MonoBehaviour
         {
             spheres[i] = objs[i].sphere;
         }
-        ComputeBuffer buffer = new(spheres.Length, sizeof(float) * 8);
+        ComputeBuffer buffer = new(spheres.Length, sizeof(float) * 13);
         buffer.SetData(spheres);
         rayTracingMaterial.SetBuffer("Spheres", buffer);
         rayTracingMaterial.SetInteger("Num", spheres.Length);
+    }
+    private void UpdateData()
+    {
+        rayTracingMaterial.SetInteger("MaxBounceCount", MaxBounceCount);
     }
 }
