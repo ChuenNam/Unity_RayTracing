@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 [ExecuteAlways][ImageEffectAllowedInSceneView]
 public class RayTracingCtrl : MonoBehaviour
@@ -9,11 +10,19 @@ public class RayTracingCtrl : MonoBehaviour
     [SerializeField] bool useShaderInSceneView;
     [SerializeField] Shader RayTracingShader;
     [SerializeField] Material rayTracingMaterial;
-    [SerializeField] int MaxBounceCount;
+    [SerializeField] int MaxBounceCount = 2;
+    [SerializeField] int numRaysPerPixel = 1;
+    [SerializeField] int NumRenderFrames = -1;
 
     public Obj[] objs;
     Sphere[] spheres;
+    RenderTexture preFrameRenderTex;
 
+    void Start()
+    {
+        preFrameRenderTex = new RenderTexture(Screen.width, Screen.height, 24);
+        preFrameRenderTex.Create();
+    }
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         if (Camera.current.name != "SceneCamera" || useShaderInSceneView)
@@ -27,6 +36,7 @@ public class RayTracingCtrl : MonoBehaviour
             UpdateData();
             //使用ray tracing并渲染到屏幕
             Graphics.Blit(null, destination, rayTracingMaterial);
+            Graphics.Blit(destination, preFrameRenderTex);
         }
         else
         {
@@ -34,7 +44,6 @@ public class RayTracingCtrl : MonoBehaviour
             Graphics.Blit(source, destination);
         }
     }
-
     private void UpdateCam(Camera cam)
     {
         float PlaneH = cam.nearClipPlane * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) * 2;
@@ -54,9 +63,14 @@ public class RayTracingCtrl : MonoBehaviour
         buffer.SetData(spheres);
         rayTracingMaterial.SetBuffer("Spheres", buffer);
         rayTracingMaterial.SetInteger("Num", spheres.Length);
+        //buffer.Release();
     }
     private void UpdateData()
     {
+        NumRenderFrames++;
         rayTracingMaterial.SetInteger("MaxBounceCount", MaxBounceCount);
+        rayTracingMaterial.SetInteger("numRaysPerPixel", numRaysPerPixel);
+        rayTracingMaterial.SetInteger("NumRenderFrames", NumRenderFrames);
+        rayTracingMaterial.SetTexture("_OldMainTex", preFrameRenderTex);
     }
 }

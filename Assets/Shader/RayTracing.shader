@@ -1,8 +1,8 @@
-Shader "RayTracing"
+Shader "Render/RayTracing"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        _MainTex ("MainTex", 2D) = "white" {}
     }
     SubShader
     {
@@ -21,7 +21,6 @@ Shader "RayTracing"
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
             };
-
             struct v2f
             {
                 float2 uv : TEXCOORD0;
@@ -140,7 +139,8 @@ Shader "RayTracing"
                     HitInfo hitInfo = CalculateRayColl(ray);
                     if(hitInfo.didHit){
                         ray.origin = hitInfo.hitPoint;
-                        ray.dir = RandomHemisphereDirection(hitInfo.normal, rng);
+                        // ray.dir = RandomHemisphereDirection(hitInfo.normal, rng); 光线将均匀的分布，不受夹角影响
+                        ray.dir = normalize(hitInfo.normal + RandomDirection(rng));  //光线受到入射角度影响产生的强度衰减(入射角越大,强度越弱)
 
                         ObjectMaterial material = hitInfo.material;
                         float3 emittedLight = material.emissionColor * material.emissionStrength;
@@ -157,9 +157,12 @@ Shader "RayTracing"
 
 
             sampler2D _MainTex;
+            sampler2D _OldMainTex;
             float4 _MainTex_ST;
             float3 ViewParam;
             float4x4 CamLocalToWorldMatrix; 
+            int numRaysPerPixel;    //每个像素接受多少根光线
+            int NumRenderFrames;    //渲染帧数量
 
             v2f vert (appdata v)
             {
@@ -175,19 +178,32 @@ Shader "RayTracing"
                 uint2 numPixel = uint2(1920,1080);
                 uint2 pixelCoord = i.uv * numPixel;
                 uint pixelIndex = pixelCoord.y * numPixel.x + pixelCoord.x;
-                uint rng = pixelIndex;
+                uint rng = pixelIndex + NumRenderFrames * 10086;
 
                 //创建射线
                 float3 viewPointLocal = float3(i.uv - 0.5, 1) * ViewParam;
                 float3 viewPoint = mul(CamLocalToWorldMatrix, float4(viewPointLocal, 1));
-
                 Ray ray;
                 ray.origin = _WorldSpaceCameraPos;
                 ray.dir = normalize(viewPoint - ray.origin);
-                // return CalculateRayColl(ray).material.color;
 
-                float3 pixelCol = Trace(ray, rng);
-                return float4(pixelCol, 1);
+                //计算每个像素接受光的平均值(减少噪声)
+                float3 totalIncomeLight = 0;
+                for(int rayIndex = 0; rayIndex < numRaysPerPixel; rayIndex++){
+                    totalIncomeLight += Trace(ray, rng);
+                }
+                float3 pixelCol = totalIncomeLight / numRaysPerPixel;
+                // return float4(pixelCol, 1);
+
+                float2 flippedUV = i.uv;
+                flippedUV.y = 1.0 - i.uv.y;
+                float4 oldRenderTex = tex2D(_OldMainTex, flippedUV.xy);
+                float4 newRenderTex = float4(pixelCol, 1);
+
+                float weight = 1.0 / (NumRenderFrames + 1);
+                float4 accumulateAverage = oldRenderTex * (1 - weight) + newRenderTex * weight;
+
+                return accumulateAverage;
             }
             ENDCG
         }
