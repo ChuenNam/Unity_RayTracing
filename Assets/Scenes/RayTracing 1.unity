@@ -170,7 +170,7 @@ MonoBehaviour:
   triangleNums: 12
   color: {r: 1, g: 1, b: 1, a: 1}
   emissionColor: {r: 1, g: 1, b: 1, a: 1}
-  emissionStrength: 2
+  emissionStrength: 1
   boundingMax: {x: -0.50000006, y: 2.01, z: 0.5}
   boundingMin: {x: 0.50000006, y: 1.9100001, z: -0.5}
 --- !u!23 &337289381
@@ -274,7 +274,7 @@ MonoBehaviour:
   mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   meshFilter: {fileID: 481682809}
   triangleNums: 12
-  color: {r: 1, g: 0.20440245, b: 0.20440245, a: 1}
+  color: {r: 1, g: 0, b: 0, a: 1}
   emissionColor: {r: 0, g: 0, b: 0, a: 0}
   emissionStrength: 0
   boundingMax: {x: -2.05, y: 2.5, z: 2}
@@ -867,7 +867,7 @@ MonoBehaviour:
   mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   meshFilter: {fileID: 1585513708}
   triangleNums: 12
-  color: {r: 0, g: 0.4507408, b: 1, a: 1}
+  color: {r: 0, g: 0, b: 1, a: 1}
   emissionColor: {r: 0, g: 0, b: 0, a: 0}
   emissionStrength: 0
   boundingMax: {x: 2.1499999, y: 2.5, z: 2}
@@ -1240,7 +1240,7 @@ MonoBehaviour:
   RayTracingShader: {fileID: 4800000, guid: 12acae790e33aed478e09200b36a4adf, type: 3}
   rayTracingMaterial: {fileID: 2100000, guid: b9aab8e8e98f9924c8e8fd6187fa611e, type: 2}
   MaxBounceCount: 5
-  numRaysPerPixel: 30
+  numRaysPerPixel: 5
   NumRenderFrames: -1
   objs:
   - {fileID: 1662451001}
@@ -1282,13 +1282,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1850745841}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 2}
-  m_LocalScale: {x: 0.1, y: 5, z: 4.3}
+  m_LocalScale: {x: 4.3, y: 5, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1270924535}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1850745843
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1307,8 +1307,8 @@ MonoBehaviour:
   color: {r: 1, g: 1, b: 1, a: 1}
   emissionColor: {r: 0, g: 0, b: 0, a: 0}
   emissionStrength: 0
-  boundingMax: {x: 2.1500003, y: 2.5, z: 1.9499998}
-  boundingMin: {x: -2.1500003, y: -2.5, z: 2.0500002}
+  boundingMax: {x: 2.15, y: 2.5, z: 2.05}
+  boundingMin: {x: -2.15, y: -2.5, z: 1.95}
 --- !u!23 &1850745844
 MeshRenderer:
   m_ObjectHideFlags: 0
