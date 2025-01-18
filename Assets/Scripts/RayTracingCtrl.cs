@@ -16,6 +16,10 @@ public class RayTracingCtrl : MonoBehaviour
 
     public Obj[] objs;
     Sphere[] spheres;
+
+    public RenderingMesh[] RenderingMesh;
+    MeshInfo[] meshInfo;
+
     RenderTexture preFrameRenderTex;
 
     void Start()
@@ -54,16 +58,46 @@ public class RayTracingCtrl : MonoBehaviour
     }
     private void UpdateObj()
     {
-        spheres = new Sphere[objs.Length];
-        for (int i = 0; i < objs.Length; i++)
+        #region ÇòÌå
+        //if (objs.Length != 0)
+        //{
+        //    spheres = new Sphere[objs.Length];
+        //    for (int i = 0; i < objs.Length; i++)
+        //    {
+        //        spheres[i] = objs[i].sphere;
+        //    }
+        //    ComputeBuffer buffer = new(spheres.Length, sizeof(float) * 13);
+        //    buffer.SetData(spheres);
+        //    rayTracingMaterial.SetBuffer("Spheres", buffer);
+        //    rayTracingMaterial.SetInteger("NumSpheres", spheres.Length);
+        //}
+        #endregion
+
+        #region Íø¸ñ
+        if (RenderingMesh.Length != 0)
         {
-            spheres[i] = objs[i].sphere;
+            meshInfo = new MeshInfo[RenderingMesh.Length];
+            List<Triangle> triangleList = new();
+            for (int i = 0; i < RenderingMesh.Length; i++)
+            {
+                meshInfo[i] = RenderingMesh[i].meshInfo;
+                foreach (var triangle in RenderingMesh[i].allTriangles)
+                {
+                    triangleList.Add(triangle);
+                }
+            }
+
+            ComputeBuffer triangleBuffer = new(triangleList.Count, sizeof(float) * 18);
+            triangleBuffer.SetData(triangleList);
+            rayTracingMaterial.SetBuffer("Triangles", triangleBuffer);
+
+            ComputeBuffer meshBuffer = new(meshInfo.Length, sizeof(float) * 15 + sizeof(int) * 1);
+            meshBuffer.SetData(meshInfo);
+            rayTracingMaterial.SetBuffer("AllMeshInfo", meshBuffer);
+
+            rayTracingMaterial.SetInteger("NumMeshes", RenderingMesh.Length);
         }
-        ComputeBuffer buffer = new(spheres.Length, sizeof(float) * 13);
-        buffer.SetData(spheres);
-        rayTracingMaterial.SetBuffer("Spheres", buffer);
-        rayTracingMaterial.SetInteger("Num", spheres.Length);
-        //buffer.Release();
+        #endregion
     }
     private void UpdateData()
     {

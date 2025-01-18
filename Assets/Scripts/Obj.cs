@@ -23,9 +23,3 @@ public struct Sphere
     public float radius;
     public ObjMaterial material;
 }
-public struct ObjMaterial
-{
-    public Color color;
-    public Color emissionColor;
-    public float emissionStrength;
-}
