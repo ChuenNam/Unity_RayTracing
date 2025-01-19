@@ -136,17 +136,41 @@
             } 
             
             //计算射线与网格的BoundingBox关系(AABB算法)
+            // bool RayBoundingBox(Ray ray, float3 boundsMax, float3 boundsMin) {
+            //     float3 invDir = 1.0 / ray.dir;
+            //     float3 t0 = (boundsMin - ray.origin) * invDir;
+            //     float3 t1 = (boundsMax - ray.origin) * invDir;
+            //     float3 tmin = min(t0, t1);
+            //     float3 tmax = max(t0, t1);
+
+            //     float tenter = max(tmin.x, max(tmin.y, tmin.z));
+            //     float texit = min(tmax.x, min(tmax.y, tmax.z));
+
+            //     return (tenter <= texit && texit >= 0);
+            // }
+
             bool RayBoundingBox(Ray ray, float3 boundsMax, float3 boundsMin) {
-                float3 invDir = 1.0 / ray.dir;
+                // 设置一个小的容差，用于浮点数比较
+                const float EPSILON = 1e-6;
+                // 避免除以零的错误，检查 ray.dir 的每个分量是否接近零
+                float3 invDir = float3(ray.dir.x != 0 ? 1.0f / ray.dir.x : 0.0f, 
+                                       ray.dir.y != 0 ? 1.0f / ray.dir.y : 0.0f,
+                                       ray.dir.z != 0 ? 1.0f / ray.dir.z : 0.0f);
+
+                // 计算 t0 和 t1，分别是射线与 AABB 的两个边界的交点
                 float3 t0 = (boundsMin - ray.origin) * invDir;
                 float3 t1 = (boundsMax - ray.origin) * invDir;
+
+                // 交换 t0 和 t1，如果 ray.dir 为负
                 float3 tmin = min(t0, t1);
                 float3 tmax = max(t0, t1);
 
+                // 计算射线的进入和退出的 t 值
                 float tenter = max(tmin.x, max(tmin.y, tmin.z));
                 float texit = min(tmax.x, min(tmax.y, tmax.z));
 
-                return (tenter <= texit && texit >= 0);
+                // 考虑浮点数比较误差，使用 EPSILON 进行调整
+                return (tenter <= texit + EPSILON && texit >= 0);
             }
 
             StructuredBuffer<Triangle> Triangles;
@@ -159,10 +183,10 @@
                 int addNum = 0;
                 for(int meshIndex = 0; meshIndex < NumMeshes; meshIndex++){
                     MeshInfo meshInfo = AllMeshInfo[meshIndex];
-                    if(!RayBoundingBox(ray, meshInfo.boundsMax, meshInfo.boundsMin)){
-                        addNum += meshInfo.numTriangles;
-                        continue;
-                    }
+                    // if(!RayBoundingBox(ray, meshInfo.boundsMax, meshInfo.boundsMin)){
+                    //     addNum += meshInfo.numTriangles;
+                    //     continue;
+                    // }
 
                     for(int i = 0; i < meshInfo.numTriangles; i++){
                         Triangle tri = Triangles[addNum + i];

@@ -41,9 +41,9 @@ public class RenderingMesh : MonoBehaviour
             allTriangles[id].posB = transform.TransformPoint(mesh.vertices[idx1]);
             allTriangles[id].posC = transform.TransformPoint(mesh.vertices[idx2]);
 
-            allTriangles[id].normalA = mesh.normals[idx0];
-            allTriangles[id].normalB = mesh.normals[idx1];
-            allTriangles[id].normalC = mesh.normals[idx2];
+            allTriangles[id].normalA = transform.TransformDirection(mesh.normals[idx0]).normalized;
+            allTriangles[id].normalB = transform.TransformDirection(mesh.normals[idx1]).normalized;
+            allTriangles[id].normalC = transform.TransformDirection(mesh.normals[idx2]).normalized;
         }
 
         meshInfo.material.color = color;
