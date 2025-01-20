@@ -3,31 +3,31 @@ using UnityEngine;
 [ExecuteAlways]
 public class RenderingMesh : MonoBehaviour
 {
-    [SerializeField] Mesh mesh;
-    [SerializeField] MeshFilter meshFilter;
+    private Mesh mesh;
+    private MeshFilter meshFilter;
+    private Renderer Renderer;
     public int triangleNums;
 
+    [Header("Material")]
     [SerializeField] Color color;
     [SerializeField] Color emissionColor;
-    [SerializeField] float emissionStrength;
+    [SerializeField][Range(0, 10)] float emissionStrength;
+    [SerializeField][Range(0, 1)] float smooth;
+
     public MeshInfo meshInfo;
     public Triangle[] allTriangles;
-
-    [Header("Debug")]
-    public Vector3 boundingMax;
-    public Vector3 boundingMin;
-
 
     void Update()
     {
         meshFilter = GetComponent<MeshFilter>();
+        Renderer = GetComponent<MeshRenderer>();
         mesh = meshFilter.sharedMesh;
         triangleNums = mesh.triangles.Length / 3;
         meshInfo.numTriangles = triangleNums;
         allTriangles = new Triangle[triangleNums];
 
-        meshInfo.boundsMin = transform.TransformPoint(mesh.bounds.min);
-        meshInfo.boundsMax = transform.TransformPoint(mesh.bounds.max);
+        meshInfo.boundsMax = Renderer.bounds.max;
+        meshInfo.boundsMin = Renderer.bounds.min;
 
         for (int i = 0; i < mesh.triangles.Length; i+=3)
         {
@@ -49,10 +49,7 @@ public class RenderingMesh : MonoBehaviour
         meshInfo.material.color = color;
         meshInfo.material.emissionColor = emissionColor;
         meshInfo.material.emissionStrength = emissionStrength;
-
-        //Debug
-        boundingMin = meshInfo.boundsMin;
-        boundingMax = meshInfo.boundsMax;
+        meshInfo.material.smooth = smooth;
     }
 }
 
@@ -75,4 +72,5 @@ public struct ObjMaterial
     public Color color;
     public Color emissionColor;
     public float emissionStrength;
+    public float smooth;
 }

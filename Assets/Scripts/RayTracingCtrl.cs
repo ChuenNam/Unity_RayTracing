@@ -91,7 +91,7 @@ public class RayTracingCtrl : MonoBehaviour
             triangleBuffer.SetData(triangleList);
             rayTracingMaterial.SetBuffer("Triangles", triangleBuffer);
 
-            ComputeBuffer meshBuffer = new(meshInfo.Length, sizeof(float) * 15 + sizeof(int) * 1);
+            ComputeBuffer meshBuffer = new(meshInfo.Length, sizeof(float) * 16 + sizeof(int) * 1);
             meshBuffer.SetData(meshInfo);
             rayTracingMaterial.SetBuffer("AllMeshInfo", meshBuffer);
 

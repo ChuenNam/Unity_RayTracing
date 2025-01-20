@@ -31,6 +31,7 @@
                 float4 color;
                 float4 emissionColor;
                 float emissionStrength;
+                float smooth;
             };
             //定义球体 >> 需要和外部结构体顺序保持一致!!!
             struct Sphere{
@@ -136,40 +137,27 @@
             } 
             
             //计算射线与网格的BoundingBox关系(AABB算法)
-            // bool RayBoundingBox(Ray ray, float3 boundsMax, float3 boundsMin) {
-            //     float3 invDir = 1.0 / ray.dir;
-            //     float3 t0 = (boundsMin - ray.origin) * invDir;
-            //     float3 t1 = (boundsMax - ray.origin) * invDir;
-            //     float3 tmin = min(t0, t1);
-            //     float3 tmax = max(t0, t1);
-
-            //     float tenter = max(tmin.x, max(tmin.y, tmin.z));
-            //     float texit = min(tmax.x, min(tmax.y, tmax.z));
-
-            //     return (tenter <= texit && texit >= 0);
-            // }
-
             bool RayBoundingBox(Ray ray, float3 boundsMax, float3 boundsMin) {
-                // 设置一个小的容差，用于浮点数比较
-                const float EPSILON = 1e-6;
-                // 避免除以零的错误，检查 ray.dir 的每个分量是否接近零
+                //设置一个小的容差，用于浮点数比较
+                float EPSILON = 1e-6;
+                //避免除以零的错误，检查 ray.dir 的每个分量是否接近零
                 float3 invDir = float3(ray.dir.x != 0 ? 1.0f / ray.dir.x : 0.0f, 
                                        ray.dir.y != 0 ? 1.0f / ray.dir.y : 0.0f,
                                        ray.dir.z != 0 ? 1.0f / ray.dir.z : 0.0f);
 
-                // 计算 t0 和 t1，分别是射线与 AABB 的两个边界的交点
+                //计算 t0 和 t1，分别是射线与 AABB 的两个边界的交点
                 float3 t0 = (boundsMin - ray.origin) * invDir;
                 float3 t1 = (boundsMax - ray.origin) * invDir;
 
-                // 交换 t0 和 t1，如果 ray.dir 为负
+                //交换 t0 和 t1，如果 ray.dir 为负
                 float3 tmin = min(t0, t1);
                 float3 tmax = max(t0, t1);
 
-                // 计算射线的进入和退出的 t 值
+                //计算射线的进入和退出的 t 值
                 float tenter = max(tmin.x, max(tmin.y, tmin.z));
                 float texit = min(tmax.x, min(tmax.y, tmax.z));
 
-                // 考虑浮点数比较误差，使用 EPSILON 进行调整
+                //考虑浮点数比较误差，使用 EPSILON 进行调整
                 return (tenter <= texit + EPSILON && texit >= 0);
             }
 
@@ -183,10 +171,10 @@
                 int addNum = 0;
                 for(int meshIndex = 0; meshIndex < NumMeshes; meshIndex++){
                     MeshInfo meshInfo = AllMeshInfo[meshIndex];
-                    // if(!RayBoundingBox(ray, meshInfo.boundsMax, meshInfo.boundsMin)){
-                    //     addNum += meshInfo.numTriangles;
-                    //     continue;
-                    // }
+                    if(!RayBoundingBox(ray, meshInfo.boundsMax, meshInfo.boundsMin)){
+                        addNum += meshInfo.numTriangles;
+                        continue;
+                    }
 
                     for(int i = 0; i < meshInfo.numTriangles; i++){
                         Triangle tri = Triangles[addNum + i];
@@ -244,13 +232,15 @@
                 for (int i = 0; i <= MaxBounceCount; i++){
                     //HitInfo hitInfo = CalculateRayColl(ray);//球体模型渲染
                     HitInfo hitInfo = MeshRayCast(ray);//网格模型渲染
+                    ObjectMaterial material = hitInfo.material;
 
                     if(hitInfo.didHit){
                         ray.origin = hitInfo.hitPoint;
                         // ray.dir = RandomHemisphereDirection(hitInfo.normal, rng); 光线将均匀的分布，不受夹角影响
-                        ray.dir = normalize(hitInfo.normal + RandomDirection(rng));  //光线受到入射角度影响产生的强度衰减(入射角越大,强度越弱)
+                        float3 diffuseDir = normalize(hitInfo.normal + RandomDirection(rng));  //漫反射，光线受到入射角度影响产生的强度衰减(入射角越大,强度越弱)
+                        float3 specularDir = reflect(ray.dir, hitInfo.normal);  //全反射光线
+                        ray.dir = lerp(diffuseDir, specularDir, material.smooth);   //根据光滑度插值全反射计算光线
 
-                        ObjectMaterial material = hitInfo.material;
                         float3 emittedLight = material.emissionColor * material.emissionStrength;
                         incomingLight += emittedLight * rayColor;
                         rayColor *= material.color;
