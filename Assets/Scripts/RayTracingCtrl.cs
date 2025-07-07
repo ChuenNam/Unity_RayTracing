@@ -7,6 +7,16 @@ using UnityEngine.Rendering;
 [ExecuteAlways][ImageEffectAllowedInSceneView]
 public class RayTracingCtrl : MonoBehaviour
 {
+    private static readonly int ViewParam = Shader.PropertyToID("ViewParam");
+    private static readonly int CamLocalToWorldMatrix = Shader.PropertyToID("CamLocalToWorldMatrix");
+    private static readonly int Triangles = Shader.PropertyToID("Triangles");
+    private static readonly int AllMeshInfo = Shader.PropertyToID("AllMeshInfo");
+    private static readonly int NumMeshes = Shader.PropertyToID("NumMeshes");
+    private static readonly int BounceCount = Shader.PropertyToID("MaxBounceCount");
+    private static readonly int NumRaysPerPixel = Shader.PropertyToID("numRaysPerPixel");
+    private static readonly int RenderFrames = Shader.PropertyToID("NumRenderFrames");
+    private static readonly int OldMainTex = Shader.PropertyToID("_OldMainTex");
+    
     [SerializeField] bool useShaderInSceneView;
     [SerializeField] Shader RayTracingShader;
     [SerializeField] Material rayTracingMaterial;
@@ -31,20 +41,20 @@ public class RayTracingCtrl : MonoBehaviour
     {
         if (Camera.current.name != "SceneCamera" || useShaderInSceneView)
         {
-            //TODO:…Ë÷√ π”√RayTracingµƒ≤ƒ÷ 
+            //TODO:ÔøΩÔøΩÔøΩÔøΩ πÔøΩÔøΩRayTracingÔøΩƒ≤ÔøΩÔøΩÔøΩ
             //ShaderHelper.InitMaterial(rayTracingShader, ref rayTracingMaterial);
 
-            //¥´µ›shader ˝æ›
+            //Êõ¥Êñ∞‰ø°ÊÅØÁªôshader
             UpdateCam(Camera.current);
             UpdateObj();
             UpdateData();
-            // π”√ray tracing≤¢‰÷»æµΩ∆¡ƒª
+            //ÂºÄÂßãray tracingÊ∏≤Êüì
             Graphics.Blit(null, destination, rayTracingMaterial);
             Graphics.Blit(destination, preFrameRenderTex);
         }
         else
         {
-            //‰÷»æƒ¨»œπ‹œﬂµΩ∆¡ƒª
+            //Ê≠£Â∏∏Ê∏≤Êüì
             Graphics.Blit(source, destination);
         }
     }
@@ -53,12 +63,12 @@ public class RayTracingCtrl : MonoBehaviour
         float PlaneH = cam.nearClipPlane * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) * 2;
         float PlaneW = PlaneH * cam.aspect;
         //Send data to shader
-        rayTracingMaterial.SetVector("ViewParam", new Vector3(PlaneW, PlaneH, cam.nearClipPlane));
-        rayTracingMaterial.SetMatrix("CamLocalToWorldMatrix", cam.transform.localToWorldMatrix);
+        rayTracingMaterial.SetVector(ViewParam, new Vector3(PlaneW, PlaneH, cam.nearClipPlane));
+        rayTracingMaterial.SetMatrix(CamLocalToWorldMatrix, cam.transform.localToWorldMatrix);
     }
     private void UpdateObj()
     {
-        #region «ÚÃÂ
+        #region ÁêÉ‰Ωì
         //if (objs.Length != 0)
         //{
         //    spheres = new Sphere[objs.Length];
@@ -73,7 +83,7 @@ public class RayTracingCtrl : MonoBehaviour
         //}
         #endregion
 
-        #region Õ¯∏Ò
+        #region ÁΩëÊ†º‰Ωì
         if (RenderingMesh.Length != 0)
         {
             meshInfo = new MeshInfo[RenderingMesh.Length];
@@ -89,22 +99,22 @@ public class RayTracingCtrl : MonoBehaviour
 
             ComputeBuffer triangleBuffer = new(triangleList.Count, sizeof(float) * 18);
             triangleBuffer.SetData(triangleList);
-            rayTracingMaterial.SetBuffer("Triangles", triangleBuffer);
+            rayTracingMaterial.SetBuffer(Triangles, triangleBuffer);
 
-            ComputeBuffer meshBuffer = new(meshInfo.Length, sizeof(float) * 16 + sizeof(int) * 1);
+            ComputeBuffer meshBuffer = new(meshInfo.Length, sizeof(float) * 17 + sizeof(int) * 1);
             meshBuffer.SetData(meshInfo);
-            rayTracingMaterial.SetBuffer("AllMeshInfo", meshBuffer);
+            rayTracingMaterial.SetBuffer(AllMeshInfo, meshBuffer);
 
-            rayTracingMaterial.SetInteger("NumMeshes", RenderingMesh.Length);
+            rayTracingMaterial.SetInteger(NumMeshes, RenderingMesh.Length);
         }
         #endregion
     }
     private void UpdateData()
     {
         NumRenderFrames++;
-        rayTracingMaterial.SetInteger("MaxBounceCount", MaxBounceCount);
-        rayTracingMaterial.SetInteger("numRaysPerPixel", numRaysPerPixel);
-        rayTracingMaterial.SetInteger("NumRenderFrames", NumRenderFrames);
-        rayTracingMaterial.SetTexture("_OldMainTex", preFrameRenderTex);
+        rayTracingMaterial.SetInteger(BounceCount, MaxBounceCount);
+        rayTracingMaterial.SetInteger(NumRaysPerPixel, numRaysPerPixel);
+        rayTracingMaterial.SetInteger(RenderFrames, NumRenderFrames);
+        rayTracingMaterial.SetTexture(OldMainTex, preFrameRenderTex);
     }
 }

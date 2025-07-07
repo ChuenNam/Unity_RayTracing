@@ -32,6 +32,7 @@
                 float4 emissionColor;
                 float emissionStrength;
                 float smooth;
+                float transparency;  // 添加透明度属性 (0=完全透明, 1=完全不透明)
             };
             //定义球体 >> 需要和外部结构体顺序保持一致!!!
             struct Sphere{
@@ -224,6 +225,7 @@
 
             int MaxBounceCount;
             //追踪函数
+            /*
             float3 Trace(Ray ray, inout uint rng){
 
                 float3 incomingLight = 0;
@@ -252,7 +254,114 @@
 
                 return incomingLight;
             }
+            */
+            float3 Trace(Ray ray, inout uint rng) {
+                float3 incomingLight = 0;
+                float3 rayColor = 1;
+                
+                // 用于追踪当前是否在透明物体内部
+                bool insideTransparentObject = false;
+                float currentIOR = 1.0;  // 当前介质折射率（空气）
 
+                for (int bounce = 0; bounce <= MaxBounceCount; bounce++) {
+                    HitInfo hitInfo = MeshRayCast(ray);
+                    ObjectMaterial material = hitInfo.material;
+
+                    if (hitInfo.didHit) {
+                        // 1. 计算进入/离开状态
+                        bool isEntering = dot(ray.dir, hitInfo.normal) < 0;
+                        float3 normal = isEntering ? hitInfo.normal : -hitInfo.normal;
+                        
+                        // 2. 处理发射光（自发光）
+                        float3 emittedLight = material.emissionColor * material.emissionStrength;
+                        incomingLight += emittedLight * rayColor;
+                        
+                        // 3. 处理透明材质
+                        if (material.transparency > 0) {
+                            // 3.1 设置折射率
+                            float materialIOR = 1.5;  // 默认玻璃折射率
+                            float iorRatio = isEntering ? (currentIOR / materialIOR) : (materialIOR / currentIOR);
+                            
+                            // 3.2 计算折射方向
+                            float cosi = -dot(ray.dir, normal);
+                            float sint2 = iorRatio * iorRatio * (1.0 - cosi * cosi);
+                            
+                            // 3.3 检查全内反射
+                            if (sint2 > 1.0) {
+                                // 全内反射
+                                ray.dir = reflect(ray.dir, normal);
+                                ray.origin = hitInfo.hitPoint + normal * 0.001;
+                            } else {
+                                // 3.4 计算菲涅尔反射率
+                                float cost = sqrt(1.0 - sint2);
+                                float Rparl = (iorRatio * cosi - cost) / (iorRatio * cosi + cost);
+                                float Rperp = (cosi - iorRatio * cost) / (cosi + iorRatio * cost);
+                                float reflectance = 0.5 * (Rparl * Rparl + Rperp * Rperp);
+                                
+                                // 3.5 随机选择反射或折射路径
+                                if (RandomValue(rng) < reflectance) {
+                                    // 反射
+                                    ray.dir = reflect(ray.dir, normal);
+                                    ray.origin = hitInfo.hitPoint + normal * 0.001;
+                                } else {
+                                    // 折射
+                                    ray.dir = refract(ray.dir, normal, iorRatio);
+                                    ray.origin = hitInfo.hitPoint - normal * 0.001;
+                                    
+                                    // 更新介质状态
+                                    currentIOR = isEntering ? materialIOR : 1.0;
+                                    insideTransparentObject = isEntering;
+                                }
+                            }
+                            
+                            // 3.6 光线衰减（考虑吸收和散射）
+                            float3 attenuation = material.color.rgb * material.transparency;
+                            
+                            // 根据物体厚度计算吸收 (简化模型)
+                            float thickness = length(hitInfo.hitPoint - ray.origin);
+                            attenuation = exp(-(1.0 - attenuation) * thickness * 0.5);
+                            
+                            rayColor *= attenuation;
+                        } 
+                        // 4. 处理不透明材质
+                        else {
+                            // 4.1 更新光线起点（防止自相交）
+                            ray.origin = hitInfo.hitPoint + hitInfo.normal * 0.001;
+                            
+                            // 4.2 计算散射方向
+                            float3 diffuseDir = normalize(hitInfo.normal + RandomDirection(rng));
+                            float3 specularDir = reflect(ray.dir, hitInfo.normal);
+                            
+                            // 4.3 混合漫反射和镜面反射
+                            ray.dir = lerp(diffuseDir, specularDir, material.smooth);
+                            
+                            // 4.4 材质颜色衰减
+                            rayColor *= material.color.rgb;
+                            
+                            // 离开透明物体后重置状态
+                            insideTransparentObject = false;
+                            currentIOR = 1.0;
+                        }
+                        
+                        // 5. 俄罗斯轮盘终止（减少不必要的反弹）
+                        if (bounce > 3) {
+                            float survivalProbability = max(0.05, 1 - (0.2 * bounce));
+                            if (RandomValue(rng) > survivalProbability) {
+                                break;
+                            }
+                            rayColor /= survivalProbability;
+                        }
+                    } 
+                    else {
+                        // 6. 未击中任何物体 - 添加天空盒或环境光
+                        float3 skyColor = float3(0.5, 0.7, 1.0) * (0.5 + 0.5 * ray.dir.y);
+                        incomingLight += skyColor * rayColor;
+                        break;
+                    }
+                }
+
+                return incomingLight;
+            }
 
             sampler2D _MainTex;
             sampler2D _OldMainTex;
