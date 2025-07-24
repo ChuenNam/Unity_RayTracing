@@ -76,5 +76,5 @@ public struct ObjMaterial
     public Color emissionColor;
     public float emissionStrength;
     public float smooth;
-    public float transparency;  // 添加透明度属性 (0=完全透明, 1=完全不透明)
+    public float transparency;  // 添加透明度属性 (0=完全不透明, 1=完全透明)
 }
