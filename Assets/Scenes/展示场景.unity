@@ -273,7 +273,7 @@ MonoBehaviour:
   triangleNums: 80
   color: {r: 1, g: 1, b: 1, a: 1}
   emissionColor: {r: 1, g: 1, b: 1, a: 1}
-  emissionStrength: 1
+  emissionStrength: 3
   smooth: 0
   transparency: 0
 --- !u!23 &244442101
@@ -1035,8 +1035,8 @@ MonoBehaviour:
   useShaderInSceneView: 1
   RayTracingShader: {fileID: 4800000, guid: 12acae790e33aed478e09200b36a4adf, type: 3}
   rayTracingMaterial: {fileID: 2100000, guid: b9aab8e8e98f9924c8e8fd6187fa611e, type: 2}
-  MaxBounceCount: 5
-  numRaysPerPixel: 3
+  MaxBounceCount: 6
+  numRaysPerPixel: 4
   NumRenderFrames: -1
   objs: []
   RenderingMesh:

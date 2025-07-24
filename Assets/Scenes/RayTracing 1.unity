@@ -948,7 +948,7 @@ Transform:
   m_GameObject: {fileID: 1299844145}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1, y: -2.5, z: -3}
+  m_LocalPosition: {x: -0.793, y: -2.021, z: -3.126}
   m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -1633,8 +1633,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1845302985}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.034173716, y: -0.21225648, z: -0.0075274725, w: 0.9765873}
-  m_LocalPosition: {x: 1.5693526, y: -0.90190566, z: -5.9601994}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.5, z: -6.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -1655,8 +1655,8 @@ MonoBehaviour:
   useShaderInSceneView: 1
   RayTracingShader: {fileID: 4800000, guid: 12acae790e33aed478e09200b36a4adf, type: 3}
   rayTracingMaterial: {fileID: 2100000, guid: b9aab8e8e98f9924c8e8fd6187fa611e, type: 2}
-  MaxBounceCount: 5
-  numRaysPerPixel: 2
+  MaxBounceCount: 3
+  numRaysPerPixel: 3
   NumRenderFrames: -1
   objs:
   - {fileID: 1662451001}
@@ -1671,9 +1671,6 @@ MonoBehaviour:
   - {fileID: 1332539072}
   - {fileID: 1179681987}
   - {fileID: 1734934455}
-  - {fileID: 1299844147}
-  - {fileID: 359302261}
-  - {fileID: 1239977653}
   - {fileID: 1756363883}
 --- !u!1 &1850745841
 GameObject:

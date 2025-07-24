@@ -223,6 +223,29 @@
                 return dir * sign(dot(normal, dir));
             }
 
+            // 余弦加权的半球采样
+            float3 RandomCosineHemisphereDirection(float3 normal, inout uint rng) {
+                float u1 = RandomValue(rng);
+                float u2 = RandomValue(rng);
+                
+                // 在单位圆盘上均匀采样
+                float r = sqrt(u1);
+                float phi = 2.0 * 3.1415926 * u2;
+                
+                // 转换为笛卡尔坐标（z轴对齐法线）
+                float x = r * cos(phi);
+                float y = r * sin(phi);
+                float z = sqrt(max(0.0, 1.0 - u1)); // 确保在半球内
+                
+                // 创建正交基
+                float3 tangent = normalize(cross(normal, abs(normal.y) > 0.9 ? 
+                                           float3(0, 0, 1) : float3(0, 1, 0)));
+                float3 bitangent = cross(normal, tangent);
+                
+                // 变换到世界空间
+                return normalize(x * tangent + y * bitangent + z * normal);
+            }
+
             int MaxBounceCount;
             //追踪函数
             /*
@@ -446,7 +469,8 @@
                             ray.origin = hitInfo.hitPoint + hitInfo.normal * 0.001;
                             
                             // 4.2 计算散射方向
-                            float3 diffuseDir = normalize(hitInfo.normal + RandomDirection(rng));
+                            //float3 diffuseDir = normalize(hitInfo.normal + RandomHemisphereDirection(hitInfo.normal, rng));
+                            float3 diffuseDir = RandomCosineHemisphereDirection(hitInfo.normal, rng);
                             float3 specularDir = reflect(ray.dir, hitInfo.normal);
                             
                             // 4.3 混合漫反射和镜面反射
