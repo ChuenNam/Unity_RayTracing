@@ -13,7 +13,7 @@ public class RenderingMesh : MonoBehaviour
     [SerializeField] Color emissionColor;
     [SerializeField][Range(0, 10)] float emissionStrength;
     [SerializeField][Range(0, 1)] float smooth;
-    [SerializeField][Range(0, 1)] float transparency;  // 添加透明度属性 (0=完全透明, 1=完全不透明)
+    [SerializeField][Range(0, 1)] float transparency;  // 添加透明度属性 (0=完全不透明, 1=完全透明)
 
     public MeshInfo meshInfo;
     public Triangle[] allTriangles;

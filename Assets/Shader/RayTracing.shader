@@ -494,7 +494,7 @@
                             rayColor /= survivalProbability;
                         }
                     } 
-                    /*else {
+                    else {
                         // 6. 未击中任何物体 - 添加天空盒或环境光
                         float3 skyColor = float3(0.5, 0.7, 1.0) * (0.3 + 0.7 * ray.dir.y);
                         
@@ -505,7 +505,7 @@
                         
                         incomingLight += skyColor * rayColor;
                         break;
-                    }*/
+                    }
                 }
 
                 return incomingLight;

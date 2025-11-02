@@ -41,9 +41,6 @@ public class RayTracingCtrl : MonoBehaviour
     {
         if (Camera.current.name != "SceneCamera" || useShaderInSceneView)
         {
-            //TODO:����ʹ��RayTracing�Ĳ���
-            //ShaderHelper.InitMaterial(rayTracingShader, ref rayTracingMaterial);
-
             //更新信息给shader
             UpdateCam(Camera.current);
             UpdateObj();
